@@ -46,8 +46,7 @@ static char const *__pop(void)
     if (++q->tail >= QUEUE_SIZE)
         q->tail = 0;
 
-    size_t r = atomic_fetch_sub(&q->count, 1);
-    assert(r > 0);
+    atomic_fetch_sub(&q->count, 1);
 
     return msg;
 }
@@ -72,8 +71,7 @@ static bool __put(char const *msg)
     /* increment the head, which gives us 'exclusive' access to that element */
     size_t head = atomic_fetch_add(&q->head, 1);
     assert(q->msg[head % QUEUE_SIZE] == 0);
-    char const *rv = atomic_exchange(&q->msg[head % QUEUE_SIZE], msg);
-    assert(rv == NULL);
+    atomic_exchange(&q->msg[head % QUEUE_SIZE], msg);
     return true;
 }
 
