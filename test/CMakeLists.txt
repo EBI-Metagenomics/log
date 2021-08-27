@@ -1,11 +1,15 @@
 add_custom_target(all_tests)
 find_package(hope REQUIRED)
 
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 function(log_add_test name srcs)
   add_executable(${name} ${srcs})
   add_dependencies(all_tests ${name})
   target_link_libraries(${name} PRIVATE LOG::log)
-  target_link_libraries(${name} PUBLIC HOPE::hope)
+  target_link_libraries(${name} PRIVATE HOPE::hope)
+  target_link_libraries(${name} PRIVATE Threads::Threads)
   target_compile_options(${name} PRIVATE ${WARNING_FLAGS})
   target_compile_features(${name} PRIVATE c_std_11)
   add_test(NAME ${name} COMMAND ${name})
