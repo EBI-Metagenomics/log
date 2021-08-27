@@ -1,42 +1,28 @@
-#include "c11threads.h"
 #include "hope/hope.h"
 #include "log/log.h"
-#include <stdio.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 
-static int put_thrd0(void *s)
-{
-    log_put(LOG_INFO, "put_thrd0");
-    thrd_exit(0);
-    return 0;
-}
-
-static int put_thrd1(void *s)
-{
-    log_put(LOG_INFO, "put_thrd1");
-    thrd_exit(0);
-    return 0;
-}
-
-static int put_thrd2(void *s)
-{
-    log_put(LOG_INFO, "put_thrd2");
-    thrd_exit(0);
-    return 0;
-}
-
-static int put_thrd3(void *s)
-{
-    log_put(LOG_INFO, "put_thrd3");
-    thrd_exit(0);
-    return 0;
-}
-
-typedef int put_thrd(void *s);
-
 #define TIMES 50
 #define NTHREADS 4
+
+static void *put_thrd(void *s)
+{
+    int i = (int)(long long)s;
+
+    if (i == 0)
+        log_put(LOG_INFO, "put_thrd0");
+    else if (i == 1)
+        log_put(LOG_INFO, "put_thrd1");
+    else if (i == 2)
+        log_put(LOG_INFO, "put_thrd2");
+    else if (i == 3)
+        log_put(LOG_INFO, "put_thrd3");
+
+    pthread_exit(NULL);
+    return NULL;
+}
 
 static void count_file(char const *restrict filename, int count[4])
 {
@@ -71,20 +57,16 @@ int main(void)
         perror("freopen() failed");
         return EXIT_FAILURE;
     }
-    put_thrd *put_thrds[NTHREADS] = {put_thrd0, put_thrd1, put_thrd2,
-                                     put_thrd3};
 
-    thrd_t tid[NTHREADS * TIMES];
+    pthread_t tid[NTHREADS * TIMES];
     for (int i = 0; i < NTHREADS * TIMES; ++i)
     {
-        if (thrd_success != thrd_create(tid + i, put_thrds[i % NTHREADS], NULL))
-        {
-            return EXIT_FAILURE;
-        }
+        void *j = (void *)(long long)(i % NTHREADS);
+        EQ(pthread_create(tid + i, NULL, &put_thrd, j), 0);
     }
 
-    for (unsigned i = 0; i < NTHREADS * TIMES; ++i)
-        thrd_join(tid[i], NULL);
+    for (int i = 0; i < NTHREADS * TIMES; ++i)
+        pthread_join(tid[i], NULL);
 
     log_flush();
     fclose(stdout);
