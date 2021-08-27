@@ -15,6 +15,9 @@ if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 add_library(log src/log.c)
 add_library(LOG::log ALIAS log)
 
@@ -72,6 +75,7 @@ target_compile_definitions(
 target_compile_definitions(log PRIVATE $<$<BOOL:${WIN32}>:__extension__>)
 target_compile_options(log PRIVATE ${WARNING_FLAGS})
 target_compile_options(log PRIVATE "-fverbose-asm")
+target_link_libraries(log PRIVATE Threads::Threads)
 
 install(
   TARGETS log
