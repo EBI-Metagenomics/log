@@ -1,6 +1,8 @@
 #ifndef LOG_LOG_H
 #define LOG_LOG_H
 
+#include "log/export.h"
+
 #define __LOG_ARRSIZE(x) (sizeof(x) / sizeof(x[0]))
 #define __LOG_STRADDR(x) ((char const *)(char const(*)[__LOG_ARRSIZE(x)]){&(x)})
 
@@ -24,10 +26,11 @@ enum
 #define log_error(msg) log_put(LOG_ERROR, msg)
 #define log_fatal(msg) log_put(LOG_FATAL, msg)
 
-void log_flush(void);
+LOG_API void log_flush(void);
 
-void log_setup(int level, log_print_t *print, log_flush_t *flush, void *arg);
+LOG_API void log_setup(int level, log_print_t *print, log_flush_t *flush,
+                       void *arg);
 
-void __log_put(int level, char const *msg);
+LOG_API void __log_put(int level, char const *msg);
 
 #endif
