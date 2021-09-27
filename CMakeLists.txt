@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(
   log
-  VERSION 0.0.2
+  VERSION 0.0.3
   LANGUAGES C)
 
 # Generate compile_commands.json file
@@ -14,21 +14,6 @@ list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
 if("${isSystemDir}" STREQUAL "-1")
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
-
-add_library(log src/log.c)
-add_library(LOG::log ALIAS log)
-
-include(GenerateExportHeader)
-generate_export_header(
-  log
-  BASE_NAME
-  LOG
-  INCLUDE_GUARD_NAME
-  LOG_EXPORT_H
-  EXPORT_MACRO_NAME
-  LOG_API
-  EXPORT_FILE_NAME
-  ${CMAKE_CURRENT_BINARY_DIR}/log/export.h)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   # /wd5105:
@@ -45,11 +30,11 @@ else()
       -Wno-unused-parameter
       -Wsign-conversion
       -Wno-unused-function)
-endif()
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU")
-  list(APPEND WARNING_FLAGS -Wno-gnu-designator -Wno-empty-translation-unit
-       -Wno-gnu-statement-expression -Wno-nullability-extension)
+  if(NOT CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    list(APPEND WARNING_FLAGS -Wno-gnu-designator -Wno-empty-translation-unit
+         -Wno-gnu-statement-expression -Wno-nullability-extension)
+  endif()
 endif()
 
 option(CI_BUILD "CI, extra flags will be set" OFF)
@@ -57,6 +42,32 @@ if(CI_BUILD)
   message(STATUS "CI build enabled")
   add_compile_options(-Werror)
 endif()
+
+add_library(log src/log.c)
+add_library(LOG::log ALIAS log)
+
+# merge request fix:
+# https://gitlab.kitware.com/cmake/cmake/-/merge_requests/1799
+if(CMAKE_VERSION VERSION_GREATER 3.12.0)
+  # Hide functions by default.
+  set_property(TARGET elapsed PROPERTY C_VISIBILITY_PRESET hidden)
+  set_property(TARGET elapsed PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+else()
+  # Fix for https://github.com/horta/almosthere/issues/3
+  set(GCC_TOO_OLD TRUE)
+endif()
+
+include(GenerateExportHeader)
+generate_export_header(
+  log
+  BASE_NAME
+  LOG
+  INCLUDE_GUARD_NAME
+  LOG_EXPORT_H
+  EXPORT_MACRO_NAME
+  LOG_API
+  EXPORT_FILE_NAME
+  ${CMAKE_CURRENT_BINARY_DIR}/log/export.h)
 
 target_include_directories(
   log
