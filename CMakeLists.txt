@@ -50,8 +50,8 @@ add_library(LOG::log ALIAS log)
 # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/1799
 if(CMAKE_VERSION VERSION_GREATER 3.12.0)
   # Hide functions by default.
-  set_property(TARGET elapsed PROPERTY C_VISIBILITY_PRESET hidden)
-  set_property(TARGET elapsed PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+  set_property(TARGET log PROPERTY C_VISIBILITY_PRESET hidden)
+  set_property(TARGET log PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 else()
   # Fix for https://github.com/horta/almosthere/issues/3
   set(GCC_TOO_OLD TRUE)
