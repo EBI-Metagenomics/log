@@ -16,6 +16,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install dependencies
+      run: |
+        if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
+        sudo ./install-deps
+
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
 
