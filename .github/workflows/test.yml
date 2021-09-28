@@ -1,13 +1,12 @@
 name: Test
 
-on: [push]
+on: push
 
 env:
   BUILD_TYPE: Release
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -16,32 +15,27 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install dependencies
+    - name: Check for sudo
+      shell: bash
       run: |
         if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
-        sudo ./install-deps
+        echo "SUDO=$SUDO" >> $GITHUB_ENV
 
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
+    - name: Install dependencies
+      shell: bash
+      run: if [ -f install-deps ]; then $SUDO ./install-deps; fi
 
     - name: Configure CMake
-      shell: bash
-      working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCI_BUILD=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
-      working-directory: ${{github.workspace}}/build
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      shell: bash
-      run: ctest -C $BUILD_TYPE --output-on-failure
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
 
     - name: Install
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: |
-        if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
-        $SUDO cmake --build . --target install --config $BUILD_TYPE
+      run: $SUDO cmake --build . --target install --config $BUILD_TYPE
